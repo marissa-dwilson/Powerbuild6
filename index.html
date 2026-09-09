@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6edf4">
+<title>Powerbuild 6</title>
+<style>
+:root{
+  --bg:#f7f2f6; --card:#fff; --ink:#1d1820; --muted:#756b76;
+  --pink:#c77aa6; --purple:#7b66a8; --line:#eadfe7; --soft:#f5e9f1; --good:#5f8b70;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.app{max-width:760px;margin:0 auto;padding:16px 14px 100px}
+.top{background:linear-gradient(145deg,#fff,#f7eaf2);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 10px 30px rgba(46,24,39,.06)}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.08em;color:#8e5876}
+h1{font-size:34px;line-height:1;margin:7px 0 6px}
+.muted{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px}
+.stat .n{font-size:22px;font-weight:800}
+.stat .l{font-size:11px;color:var(--muted)}
+.progress{height:9px;background:#efe5eb;border-radius:999px;overflow:hidden;margin-top:12px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--pink),var(--purple));width:0%}
+.section-title{font-size:20px;margin:22px 3px 10px}
+.goalgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.goal{background:#fff;border:1px solid var(--line);border-left:4px solid var(--pink);border-radius:15px;padding:12px}
+.goal h3{margin:0 0 8px;font-size:16px}
+.goal p{margin:3px 0;font-size:13px}
+.workout{background:#fff;border:1px solid var(--line);border-radius:18px;margin:10px 0;overflow:hidden;box-shadow:0 6px 18px rgba(46,24,39,.04)}
+summary{list-style:none;padding:16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:800;font-size:18px}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"＋";font-size:24px;color:var(--purple)}
+details[open] summary:after{content:"−"}
+.focus{font-size:12px;font-weight:600;color:var(--muted);margin-top:4px}
+.exercise{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;padding:12px 16px;border-top:1px solid var(--line)}
+.exercise input[type=checkbox]{width:22px;height:22px;margin-top:1px}
+.exercise strong{display:block;font-size:15px}
+.exercise small{color:var(--muted);font-size:12px}
+.badge{font-size:10px;font-weight:800;background:var(--soft);color:#74536a;padding:5px 7px;border-radius:999px}
+.logrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:8px}.logrow.two{grid-template-columns:1fr 1fr}
+.logrow input{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;font-size:16px}
+.savebtn{width:100%;margin:12px 0 0;border:0;background:var(--ink);color:#fff;border-radius:12px;padding:12px;font-size:15px;font-weight:800}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin:10px 0;box-shadow:0 6px 18px rgba(46,24,39,.04)}
+.weeks{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.week{border:1px solid var(--line);border-radius:12px;padding:9px 4px;text-align:center;background:#fff}
+.week b{display:block;font-size:13px}
+.week span{font-size:11px;color:var(--muted)}
+.note{background:#fff7df;border:1px solid #eddca8;color:#6f5822;border-radius:12px;padding:11px;margin:12px 16px 16px;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted)}
+.footerbar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.footerinner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.footerbar button{border:0;border-radius:12px;padding:12px;font-weight:800;font-size:14px}
+.primary{background:var(--pink);color:#fff}.secondary{background:#efe7ed;color:var(--ink)}
+@media(max-width:500px){.goalgrid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.weeks{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="top">
+    <div class="kicker">6 WEEK POWERBUILDING BLOCK</div>
+    <h1>Powerbuild 6</h1>
+    <p class="muted">Strength anchors, hypertrophy volume, juicy arms and abs.</p>
+    <div class="stats">
+      <div class="stat"><div class="n" id="doneCount">0</div><div class="l">workouts completed</div></div>
+      <div class="stat"><div class="n">24</div><div class="l">6-week target</div></div>
+      <div class="stat"><div class="n" id="nextName">Glutes</div><div class="l">next in rotation</div></div>
+    </div>
+    <div class="progress"><div id="progressFill"></div></div>
+  </section>
+
+  <h2 class="section-title">Major lift goals</h2>
+  <div class="goalgrid">
+    <div class="goal"><h3>Deadlift</h3><p><b>Current:</b> 215 × 3</p><p><b>Goal:</b> 235 × 3</p><p><b>Stretch:</b> 245 × 3</p></div>
+    <div class="goal"><h3>Back Squat</h3><p><b>Current:</b> 205</p><p><b>Goal:</b> 215 × 3–5</p><p><b>Stretch:</b> 225 × 3</p></div>
+    <div class="goal"><h3>Bench Press</h3><p><b>Current:</b> 115</p><p><b>Goal:</b> 115–125 × 5 pain-free</p><p><b>Stretch:</b> 130 × 3–5 pain-free</p></div>
+    <div class="goal"><h3>Hip Thrust</h3><p><b>Current:</b> 55</p><p><b>Goal:</b> 75–85</p><p><b>Stretch:</b> 95</p></div>
+  </div>
+
+  <h2 class="section-title">6-week tracker</h2>
+  <div class="card">
+    <div class="weeks" id="weeks"></div>
+  </div>
+
+  <h2 class="section-title">Carryover accessories</h2>
+  <div class="card">
+    <p class="muted" style="margin:0 0 10px">If you finish a workout with movements unchecked, they land here for the current week. Do them later if you want, then check them off.</p>
+    <div id="carryover"></div>
+  </div>
+
+  <div class="card">
+    <strong>Weights to track</strong>
+    <div class="muted" style="font-size:13px;margin-top:6px">
+      Glute day: Hip Thrust + Back Squat<br>
+      Upper day: Shoulder Press<br>
+      Quad day: Front Squat<br>
+      Deadlift day: Deadlift<br>
+      Bench day: Bench Press
+    </div>
+  </div>
+
+  <h2 class="section-title">Workout rotation</h2>
+
+  <details class="workout" open data-name="Glutes">
+    <summary><div>1. Glute Powerbuilding<div class="focus">Glutes + upper-body touch</div></div></summary>
+    <div class="exercise"><input type="checkbox"><div><strong>Abduction primer</strong><small>1–2 × 15–25</small></div><span class="badge">ACTIVATE</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Hip Thrust</strong><small>3–4 × 6–10</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Back Squat</strong><small>3–4 × 5–8</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Romanian Deadlift</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Reverse Lunge</strong><small>3 × 8–12 each leg</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Dumbbell Shoulder Press</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Dumbbell Row</strong><small>3 × 8–12 each side</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Abduction finisher</strong><small>2–3 × 15–30</small></div><span class="badge">BURN</span></div>
+    <div style="padding:0 16px 16px">
+      <div style="font-weight:800;margin-top:10px">Track these lifts, only if you did them</div><div class="muted" style="font-size:12px;margin-top:4px">Example, if you did Hip Thrust but skipped Back Squat, enter Hip Thrust and leave Back Squat completely blank.</div>
+<div class="logrow two" data-lift="Hip Thrust"><input placeholder="Hip Thrust weight, optional"><input placeholder="Reps, optional"></div>
+<div class="logrow two" data-lift="Back Squat"><input placeholder="Back Squat weight, leave blank if skipped"><input placeholder="Reps, optional"></div>
+      <button type="button" class="savebtn" onclick="finishWorkout('Glutes',this)">Finish Workout</button>
+    </div>
+  </details>
+
+  <details class="workout" data-name="Back">
+    <summary><div>2. Back, Shoulders + Biceps<div class="focus">Back volume + juicy delts and arms</div></div></summary>
+    <div class="exercise"><input type="checkbox"><div><strong>Shoulder Press</strong><small>3–4 × 5–8</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Close-Grip Lat Pulldown</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Seated Close-Grip Row</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Bench-Supported Lat Pulldown</strong><small>3 × 10–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Bench-Supported Row</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Lateral Raise</strong><small>3 × 12–20</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Face Pull</strong><small>3 × 12–20</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Straight-Arm Hammer Curl</strong><small>3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>EZ-Bar 21s</strong><small>2–3 rounds</small></div><span class="badge">BICEPS</span></div>
+    <div style="padding:0 16px 16px">
+      <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
+<div class="logrow two" data-lift="Shoulder Press"><input placeholder="Shoulder Press weight, optional"><input placeholder="Reps, optional"></div>
+      <button type="button" class="savebtn" onclick="finishWorkout('Back',this)">Finish Workout</button>
+    </div>
+  </details>
+
+  <details class="workout" data-name="Quads">
+    <summary><div>3. Quad + Full Body<div class="focus">Quad juicer + core + upper-body sprinkle</div></div></summary>
+    <div class="exercise"><input type="checkbox"><div><strong>Leg Extension primer</strong><small>2–3 × 12–15</small></div><span class="badge">PRIMER</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Front Squat</strong><small>3–4 × 5–8</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Hack Squat</strong><small>3 × 8–12</small></div><span class="badge">JUICER</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Pull-Ups</strong><small>3 sets</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Shoulder Press</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Landmine Twists</strong><small>3 × 10–15 each side</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Leg Raises</strong><small>3 × 8–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Russian Twists</strong><small>3 × 12–20 each side</small></div></div>
+    <div style="padding:0 16px 16px">
+      <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
+<div class="logrow two" data-lift="Front Squat"><input placeholder="Front Squat weight, optional"><input placeholder="Reps, optional"></div>
+      <button type="button" class="savebtn" onclick="finishWorkout('Quads',this)">Finish Workout</button>
+    </div>
+  </details>
+
+  <details class="workout" data-name="Deadlift">
+    <summary><div>4. Deadlift + Posterior Chain<div class="focus">Heavy pull + hamstrings, glutes, grip</div></div></summary>
+    <div class="exercise"><input type="checkbox"><div><strong>Banded Lateral Duck Walks / Abduction</strong><small>1–2 rounds</small></div><span class="badge">WARMUP</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Deadlift</strong><small>3–5 × 3–6</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Glute-Biased Back Extension</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Leg Press</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Hamstring Curl</strong><small>3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Farmer Carry</strong><small>3 rounds</small></div></div>
+    <div style="padding:0 16px 16px">
+      <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
+<div class="logrow two" data-lift="Deadlift"><input placeholder="Deadlift weight, optional"><input placeholder="Reps, optional"></div>
+      <button type="button" class="savebtn" onclick="finishWorkout('Deadlift',this)">Finish Workout</button>
+    </div>
+  </details>
+
+  <details class="workout" data-name="Bench">
+    <summary><div>5. Bench + Arms + Abs<div class="focus">Bench rebuild + arm and ab hypertrophy</div></div></summary>
+    <div class="exercise"><input type="checkbox"><div><strong>Upper-body warmup</strong><small>Band pull-aparts, face pulls, external rotation</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Bench Press</strong><small>3 × 5, rebuild progression</small></div><span class="badge">TRACK</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Incline Dumbbell Press</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Lateral Raise</strong><small>3 × 12–20</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Incline DB Curl or Preacher Curl</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Overhead Triceps Extension</strong><small>3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Hammer Curl</strong><small>2–3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Triceps Pushdown</strong><small>2–3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Hanging Leg Raise</strong><small>3 × 8–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Cable Crunch</strong><small>3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Plank Variation</strong><small>2–3 sets</small></div></div>
+    <div class="note"><b>Bench rebuild:</b> RPE is programming guidance only, you do not need to record it.<br>W1 3×5 @ RPE 5–6<br>W2 3×5 @ RPE 6<br>W3 3×5 @ RPE 6–7<br>W4 3×5 @ RPE 7<br>W5 3×4–5 @ RPE 7–8<br>W6 comfortable 5-rep performance set</div>
+    <div style="padding:0 16px 16px">
+      <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
+<div class="logrow" data-lift="Bench Press"><input placeholder="Bench weight, optional"><input placeholder="Reps, optional"><input placeholder="Pain 0–10, optional"></div>
+      <button type="button" class="savebtn" onclick="finishWorkout('Bench',this)">Finish Workout</button>
+    </div>
+  </details>
+
+  <h2 class="section-title">Workout history</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Date</th><th>Lift</th><th>Wt</th><th>Reps</th><th>Pain</th></tr></thead>
+      <tbody id="history"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footerbar">
+  <div class="footerinner">
+    <button type="button" class="secondary" onclick="window.scrollTo({top:0,behavior:'smooth'})">Dashboard</button>
+    <button type="button" class="primary" onclick="openNext()">Open Next Workout</button>
+  </div>
+</div>
+
+<script>
+const rotation=["Glutes","Back","Quads","Deadlift","Bench"];
+let state=JSON.parse(localStorage.getItem("pb6_state")||'{"completed":[],"next":0,"carryover":[]}');
+if(!state.carryover) state.carryover=[];
+if(!state.lifts) state.lifts=[];
+function persist(){localStorage.setItem("pb6_state",JSON.stringify(state))}
+function update(){
+  document.getElementById("doneCount").textContent=state.completed.length;
+  document.getElementById("nextName").textContent=rotation[state.next%5];
+  document.getElementById("progressFill").style.width=Math.min(100,(state.completed.length/24*100))+"%";
+  const wg=document.getElementById("weeks"); wg.innerHTML="";
+  for(let w=1;w<=6;w++){
+    const count=state.completed.filter(x=>x.week===w).length;
+    const d=document.createElement("div"); d.className="week";
+    d.innerHTML=`<b>Week ${w}</b><span>${count}/4 done</span>`;
+    wg.appendChild(d);
+  }
+  const h=document.getElementById("history"); h.innerHTML="";
+  [...state.lifts].reverse().forEach(x=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${x.date}</td><td>${x.lift}</td><td>${x.weight||"—"}</td><td>${x.reps||"—"}</td><td>${x.pain||"—"}</td>`;
+    h.appendChild(tr);
+  });
+
+  const c=document.getElementById("carryover"); c.innerHTML="";
+  for(let w=1;w<=6;w++){
+    const items=state.carryover.filter(x=>x.week===w && !x.done);
+    if(!items.length) continue;
+    const wrap=document.createElement("div");
+    wrap.style.marginBottom="12px";
+    wrap.innerHTML=`<div style="font-weight:800;margin:4px 0 7px">Week ${w}</div>`;
+    items.forEach(item=>{
+      const row=document.createElement("label");
+      row.style.cssText="display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:start;padding:9px 0;border-top:1px solid var(--line);";
+      row.innerHTML=`<input type="checkbox" style="width:22px;height:22px" onchange="completeCarryover('${item.id}')"><div><strong style="font-size:14px">${item.exercise}</strong><div class="muted" style="font-size:11px">from ${item.workout}</div></div>`;
+      wrap.appendChild(row);
+    });
+    c.appendChild(wrap);
+  }
+  if(!c.children.length){
+    c.innerHTML='<div class="muted" style="font-size:13px">Nothing waiting, you are caught up.</div>';
+  }
+}
+function finishWorkout(name,btn){
+  try{
+    const workout=btn.closest("details.workout");
+    if(!workout) return;
+
+    const week=Math.min(6,Math.floor(state.completed.length/4)+1);
+
+    // Anything unchecked becomes carryover.
+    const unchecked=[...workout.querySelectorAll(".exercise")].filter(row=>{
+      const cb=row.querySelector('input[type="checkbox"]');
+      return cb && !cb.checked;
+    });
+
+    unchecked.forEach(row=>{
+      const exercise=row.querySelector("strong")?.textContent?.trim();
+      if(!exercise) return;
+      const exists=state.carryover.some(x=>x.week===week && x.exercise===exercise && !x.done);
+      if(!exists){
+        state.carryover.push({
+          id:Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+          week:week, workout:name, exercise:exercise, done:false
+        });
+      }
+    });
+
+    // Save every tracked lift in this workout.
+    workout.querySelectorAll("[data-lift]").forEach(row=>{
+      const fields=row.querySelectorAll("input");
+      const weight=(fields[0]?.value||"").trim();
+      const reps=(fields[1]?.value||"").trim();
+      const pain=(fields[2]?.value||"").trim();
+      if(weight || reps || pain){
+        state.lifts.push({
+          date:new Date().toLocaleDateString(),
+          week:week,
+          workout:name,
+          lift:row.dataset.lift,
+          weight:weight,
+          reps:reps,
+          pain:pain
+        });
+      }
+    });
+
+    // Completing a workout never depends on boxes or lift fields being filled.
+    state.completed.push({
+      week:week,
+      name:name,
+      date:new Date().toLocaleDateString()
+    });
+    state.next=(rotation.indexOf(name)+1)%rotation.length;
+
+    // Reset only this workout's exercise checkboxes and log fields.
+    workout.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+      cb.checked=false;
+      const idx=[...document.querySelectorAll('.workout input[type="checkbox"]')].indexOf(cb);
+      if(idx>=0) localStorage.removeItem("pb6_cb_"+idx);
+    });
+    workout.querySelectorAll("[data-lift] input").forEach(inp=>inp.value="");
+
+    persist();
+    update();
+
+    btn.textContent=unchecked.length ? `Workout saved, ${unchecked.length} moved to carryover ✓` : "Workout saved ✓";
+    setTimeout(()=>btn.textContent="Finish Workout",1800);
+  }catch(err){
+    console.error(err);
+    btn.textContent="Saved failed, tap again";
+  }
+}
+function completeCarryover(id){
+  const item=state.carryover.find(x=>x.id===id);
+  if(item) item.done=true;
+  persist(); update();
+}
+function openNext(){
+  const name=rotation[state.next%5];
+  const d=[...document.querySelectorAll("details.workout")].find(x=>x.dataset.name===name);
+  document.querySelectorAll("details.workout").forEach(x=>x.open=false);
+  d.open=true; d.scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.querySelectorAll('.workout input[type="checkbox"]').forEach((cb,i)=>{
+  const key="pb6_cb_"+i;
+  cb.checked=localStorage.getItem(key)==="1";
+  cb.addEventListener("change",()=>localStorage.setItem(key,cb.checked?"1":"0"));
+});
+update();
+</script>
+</body>
+</html>
