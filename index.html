@@ -57,8 +57,23 @@ th{color:var(--muted)}
 .primary{background:var(--pink);color:#fff}.secondary{background:#efe7ed;color:var(--ink)}
 @media(max-width:500px){.goalgrid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.weeks{grid-template-columns:repeat(3,1fr)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<div id="authOverlay" style="display:none;position:fixed;inset:0;background:#f7f3f6;z-index:9999;padding:24px;overflow:auto">
+  <div style="max-width:430px;margin:8vh auto;background:white;border:1px solid #eadfe7;border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(0,0,0,.08)">
+    <div style="font-size:12px;font-weight:900;letter-spacing:.14em;color:#a74c7c">POWERBUILD 6</div>
+    <h1 style="margin:8px 0 6px">Sign in</h1>
+    <p style="color:#756b72;margin-top:0">Your workouts will sync between your phone and desktop.</p>
+    <input id="pbEmail" type="email" autocomplete="email" placeholder="Email" style="width:100%;box-sizing:border-box;padding:14px;border:1px solid #ddd;border-radius:12px;margin:8px 0">
+    <input id="pbPassword" type="password" autocomplete="current-password" placeholder="Password" style="width:100%;box-sizing:border-box;padding:14px;border:1px solid #ddd;border-radius:12px;margin:8px 0">
+    <button type="button" onclick="powerbuildSignIn()" style="width:100%;padding:14px;border:0;border-radius:12px;background:#111;color:white;font-weight:800;margin-top:10px">Sign in to Powerbuild</button>
+    <div id="authMessage" style="font-size:13px;color:#a33;margin-top:10px"></div>
+  </div>
+</div>
+<div id="cloudStatus" style="position:fixed;right:12px;top:12px;z-index:9000;background:white;border:1px solid #eadfe7;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;box-shadow:0 5px 20px rgba(0,0,0,.06)">Cloud…</div>
+
 <div class="app">
   <section class="top">
     <div class="kicker">6 WEEK POWERBUILDING BLOCK</div>
@@ -85,7 +100,21 @@ th{color:var(--muted)}
     <div class="weeks" id="weeks"></div>
   </div>
 
-  <h2 class="section-title">Carryover accessories</h2>
+  
+<div class="card" id="nextWorkoutCard" style="border:2px solid #ead4e0">
+  <div style="font-size:11px;font-weight:900;letter-spacing:.12em;color:#a74c7c">NEXT UP</div>
+  <div id="nextWorkoutName" style="font-size:22px;font-weight:900;margin-top:5px">Loading…</div>
+  <div id="queuePreview" class="muted" style="font-size:12px;margin-top:5px"></div>
+  <button type="button" class="savebtn" onclick="openNext()" style="margin-top:12px">Open Next Workout</button>
+</div>
+
+<h2 class="section-title">6-week block</h2>
+<div class="card">
+  <div id="weekTabs" style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px"></div>
+  <div id="weekSummary" style="margin-top:12px"></div>
+</div>
+
+<h2 class="section-title">Carryover accessories</h2>
   <div class="card">
     <p class="muted" style="margin:0 0 10px">If you finish a workout with movements unchecked, they land here for the current week. Do them later if you want, then check them off.</p>
     <div id="carryover"></div>
@@ -213,7 +242,10 @@ const rotation=["Glutes","Back","Quads","Deadlift","Bench"];
 let state=JSON.parse(localStorage.getItem("pb6_state")||'{"completed":[],"next":0,"carryover":[]}');
 if(!state.carryover) state.carryover=[];
 if(!state.lifts) state.lifts=[];
-function persist(){localStorage.setItem("pb6_state",JSON.stringify(state))}
+function persist(){
+  localStorage.setItem("pb6_state",JSON.stringify(state));
+  scheduleCloudSave();
+}
 function update(){
   document.getElementById("doneCount").textContent=state.completed.length;
   document.getElementById("nextName").textContent=rotation[state.next%5];
@@ -250,6 +282,138 @@ function update(){
   if(!c.children.length){
     c.innerHTML='<div class="muted" style="font-size:13px">Nothing waiting, you are caught up.</div>';
   }
+}
+
+
+const PB_SUPABASE_URL = "https://rjwxmnyijbkaprszwngj.supabase.co";
+const PB_SUPABASE_KEY = "sb_publishable_tN2yNv9jHlQSl40DlcBvVg_g0nOx_vE";
+const pbCloud = window.supabase.createClient(PB_SUPABASE_URL, PB_SUPABASE_KEY, {
+  auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+  renderDynamicProgram();
+});
+let pbUser = null;
+let cloudReady = false;
+let cloudSaveTimer = null;
+
+function setCloudStatus(text) {
+  const el=document.getElementById("cloudStatus");
+  if(el) el.textContent=text;
+}
+
+async function powerbuildSignIn() {
+  const email=document.getElementById("pbEmail").value.trim();
+  const password=document.getElementById("pbPassword").value;
+  const msg=document.getElementById("authMessage");
+  msg.textContent="";
+  const {data,error}=await pbCloud.auth.signInWithPassword({email,password});
+  if(error) { msg.textContent=error.message; return; }
+  pbUser=data.user;
+  document.getElementById("authOverlay").style.display="none";
+  await loadCloudState();
+}
+
+async function loadCloudState() {
+  if(!pbUser) return;
+  setCloudStatus("Syncing…");
+  const {data,error}=await pbCloud.from("powerbuild_data")
+    .select("app_state")
+    .eq("user_id",pbUser.id)
+    .maybeSingle();
+  if(error) { setCloudStatus("Sync issue"); console.error(error); return; }
+  if(data && data.app_state && Object.keys(data.app_state).length) {
+    state=data.app_state;
+    if(!state.completed) state.completed=[];
+    if(!state.carryover) state.carryover=[];
+    if(!state.lifts) state.lifts=[];
+    if(typeof state.next!=="number") state.next=0;
+    localStorage.setItem("pb6_state",JSON.stringify(state));
+  } else {
+    await saveCloudStateNow();
+  }
+  cloudReady=true;
+  setCloudStatus("Cloud ✓");
+  update();
+  initWorkoutDates();
+}
+
+async function saveCloudStateNow() {
+  if(!pbUser) return;
+  const payload={user_id:pbUser.id,app_state:state,updated_at:new Date().toISOString()};
+  const {error}=await pbCloud.from("powerbuild_data").upsert(payload,{onConflict:"user_id"});
+  if(error) { setCloudStatus("Sync issue"); console.error(error); }
+  else setCloudStatus("Cloud ✓");
+}
+
+function scheduleCloudSave() {
+  if(!pbUser) return;
+  setCloudStatus("Saving…");
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(saveCloudStateNow,350);
+}
+
+async function initCloud() {
+  const {data}=await pbCloud.auth.getSession();
+  if(data.session) {
+    pbUser=data.session.user;
+    document.getElementById("authOverlay").style.display="none";
+    await loadCloudState();
+  } else {
+    setCloudStatus("Sign in");
+    document.getElementById("authOverlay").style.display="block";
+  }
+}
+
+function programWeek() {
+  return Math.min(6,Math.floor((state.completed||[]).length/4)+1);
+}
+
+function renderDynamicProgram() {
+  const next=rotation[state.next||0];
+  const nameEl=document.getElementById("nextWorkoutName");
+  const queueEl=document.getElementById("queuePreview");
+  if(nameEl) nameEl.textContent=displayWorkoutName(next);
+  if(queueEl) {
+    const q=[];
+    for(let i=1;i<5;i++) q.push(displayWorkoutName(rotation[((state.next||0)+i)%rotation.length]));
+    queueEl.textContent="Then: "+q.join(" → ");
+  }
+
+  const active=programWeek();
+  const tabs=document.getElementById("weekTabs");
+  if(tabs) {
+    tabs.innerHTML="";
+    for(let w=1;w<=6;w++) {
+      const b=document.createElement("button");
+      b.type="button";
+      b.textContent="W"+w;
+      b.style.cssText=`padding:10px 3px;border-radius:10px;border:1px solid #e5dce2;font-weight:800;background:${w===active?"#111":"#fff"};color:${w===active?"#fff":"#111"}`;
+      b.onclick=()=>renderWeekSummary(w);
+      tabs.appendChild(b);
+    }
+  }
+  renderWeekSummary(active);
+}
+
+function displayWorkoutName(name) {
+  const map={
+    Glutes:"Glutes",
+    Back:"Back + Shoulders + Biceps",
+    Quads:"Quads + Full Body",
+    Deadlift:"Deadlift + Posterior Chain",
+    Bench:"Bench + Arms + Abs"
+  };
+  return map[name]||name;
+}
+
+function renderWeekSummary(w) {
+  const el=document.getElementById("weekSummary");
+  if(!el) return;
+  const done=(state.completed||[]).filter(x=>x.week===w);
+  if(!done.length) {
+    el.innerHTML=`<div class="muted">Week ${w}, no workouts completed yet.</div>`;
+    return;
+  }
+  el.innerHTML=done.map(x=>`<div style="padding:8px 0;border-top:1px solid #eee"><strong>✓ ${displayWorkoutName(x.name)}</strong><div class="muted" style="font-size:11px">${x.date}</div></div>`).join("");
 }
 
 function todayISO(){
@@ -321,16 +485,12 @@ function finishWorkout(name,btn){
     });
     state.next=(rotation.indexOf(name)+1)%rotation.length;
 
-    // Reset only this workout's exercise checkboxes and log fields.
-    workout.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-      cb.checked=false;
-      const idx=[...document.querySelectorAll('.workout input[type="checkbox"]')].indexOf(cb);
-      if(idx>=0) localStorage.removeItem("pb6_cb_"+idx);
-    });
-    workout.querySelectorAll("[data-lift] input").forEach(inp=>inp.value="");
-
     persist();
     update();
+    workout.dataset.completed="1";
+    workout.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.disabled=true);
+    workout.open=false;
+    setTimeout(()=>openNext(),250);
 
     btn.textContent=unchecked.length ? `Workout saved, ${unchecked.length} moved to carryover ✓` : "Workout saved ✓";
     setTimeout(()=>btn.textContent="Finish Workout",1800);
@@ -345,10 +505,13 @@ function completeCarryover(id){
   persist(); update();
 }
 function openNext(){
-  const name=rotation[state.next%5];
-  const d=[...document.querySelectorAll("details.workout")].find(x=>x.dataset.name===name);
-  document.querySelectorAll("details.workout").forEach(x=>x.open=false);
-  d.open=true; d.scrollIntoView({behavior:"smooth",block:"start"});
+  const nextName=rotation[state.next||0];
+  document.querySelectorAll("details.workout").forEach(d=>d.open=false);
+  const target=document.querySelector(`details.workout[data-name="${nextName}"]`);
+  if(target){
+    target.open=true;
+    target.scrollIntoView({behavior:"smooth",block:"start"});
+  }
 }
 document.querySelectorAll('.workout input[type="checkbox"]').forEach((cb,i)=>{
   const key="pb6_cb_"+i;
@@ -358,6 +521,8 @@ document.querySelectorAll('.workout input[type="checkbox"]').forEach((cb,i)=>{
 update();
 
 initWorkoutDates();
+
+initCloud();
 </script>
 </body>
 </html>

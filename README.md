@@ -1,13 +1,16 @@
-# Powerbuild 6 v7
+# Powerbuild 6 Cloud v8
 
-Updated Back + Shoulders + Biceps Day:
-1. Shoulder Press
-2. Nelson's Lateral Raises
-3. Seated Close-Grip Row
-4. Single-Arm Bench-Supported Lat Pulldown
-5. Smith Machine Underhand Shoulder Press
-6. Face Pulls
-7. EZ-Bar 21s
-8. Cable Crunches
+Integrated build:
+- Supabase email/password sign-in
+- Persistent sign-in
+- Cloud state sync between devices
+- Dynamic Next Up queue
+- Six program-week tabs
+- Four completed workouts advances the program week
+- Five-workout rotation continues across week boundaries
+- Completed workout collapses and next workout opens
+- Carryover accessories
+- Editable workout dates
+- Updated Back + Shoulders + Biceps programming
 
-Replace the existing index.html in your GitHub Pages repo with this version.
+For GitHub Pages, replace your existing `index.html` with this version and commit.
