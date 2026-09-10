@@ -1,25 +1,13 @@
-# Powerbuild 6
+# Powerbuild 6 v7
 
-A mobile-first personal powerbuilding tracker.
+Updated Back + Shoulders + Biceps Day:
+1. Shoulder Press
+2. Nelson's Lateral Raises
+3. Seated Close-Grip Row
+4. Single-Arm Bench-Supported Lat Pulldown
+5. Smith Machine Underhand Shoulder Press
+6. Face Pulls
+7. EZ-Bar 21s
+8. Cable Crunches
 
-## What it includes
-- 6-week powerbuilding block
-- 5-workout continuous rotation
-- 4-workout weekly target
-- Major lift tracking
-- Bench pain tracking
-- Carryover accessories for skipped movements
-- Local browser storage, no account or database required
-
-## Tracked lifts
-- Glute Day: Hip Thrust, Back Squat
-- Back + Shoulders + Biceps: Shoulder Press
-- Quad + Full Body: Front Squat
-- Deadlift / Posterior Chain: Deadlift
-- Bench + Arms + Abs: Bench Press
-
-## Run it
-Open `index.html` in a browser.
-
-## GitHub Pages
-Upload these files to a GitHub repository, then enable GitHub Pages from the repository settings and deploy from the main branch/root.
+Replace the existing index.html in your GitHub Pages repo with this version.
