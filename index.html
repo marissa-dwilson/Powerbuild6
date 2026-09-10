@@ -118,25 +118,24 @@ th{color:var(--muted)}
       <div style="font-weight:800;margin-top:10px">Track these lifts, only if you did them</div><div class="muted" style="font-size:12px;margin-top:4px">Example, if you did Hip Thrust but skipped Back Squat, enter Hip Thrust and leave Back Squat completely blank.</div>
 <div class="logrow two" data-lift="Hip Thrust"><input placeholder="Hip Thrust weight, optional"><input placeholder="Reps, optional"></div>
 <div class="logrow two" data-lift="Back Squat"><input placeholder="Back Squat weight, leave blank if skipped"><input placeholder="Reps, optional"></div>
-      <button type="button" class="savebtn" onclick="finishWorkout('Glutes',this)">Finish Workout</button>
+      <div style="margin-top:12px"><label style="font-weight:800;font-size:13px">Workout Date</label><input class="workout-date" type="date" style="width:100%;margin-top:6px"></div><button type="button" class="savebtn" onclick="finishWorkout('Glutes',this)">Finish Workout</button>
     </div>
   </details>
 
   <details class="workout" data-name="Back">
-    <summary><div>2. Back, Shoulders + Biceps<div class="focus">Back volume + juicy delts and arms</div></div></summary>
+    <summary><div>2. Back, Shoulders + Biceps<div class="focus">Thick defined back + poppin shoulders and biceps</div></div></summary>
     <div class="exercise"><input type="checkbox"><div><strong>Shoulder Press</strong><small>3–4 × 5–8</small></div><span class="badge">TRACK</span></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Close-Grip Lat Pulldown</strong><small>3 × 8–12</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Nelson's Lateral Raises</strong><small>3 × 10–15</small></div></div>
     <div class="exercise"><input type="checkbox"><div><strong>Seated Close-Grip Row</strong><small>3 × 8–12</small></div></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Bench-Supported Lat Pulldown</strong><small>3 × 10–12</small></div></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Bench-Supported Row</strong><small>3 × 8–12</small></div></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Lateral Raise</strong><small>3 × 12–20</small></div></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Face Pull</strong><small>3 × 12–20</small></div></div>
-    <div class="exercise"><input type="checkbox"><div><strong>Straight-Arm Hammer Curl</strong><small>3 × 10–15</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Single-Arm Bench-Supported Lat Pulldown</strong><small>3 × 10–12 each side</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Smith Machine Underhand Shoulder Press</strong><small>3 × 8–10</small></div></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Face Pulls</strong><small>3 × 12–20</small></div></div>
     <div class="exercise"><input type="checkbox"><div><strong>EZ-Bar 21s</strong><small>2–3 rounds</small></div><span class="badge">BICEPS</span></div>
+    <div class="exercise"><input type="checkbox"><div><strong>Cable Crunches</strong><small>3 × 10–15</small></div><span class="badge">CORE</span></div>
     <div style="padding:0 16px 16px">
       <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
-<div class="logrow two" data-lift="Shoulder Press"><input placeholder="Shoulder Press weight, optional"><input placeholder="Reps, optional"></div>
-      <button type="button" class="savebtn" onclick="finishWorkout('Back',this)">Finish Workout</button>
+      <div class="logrow two" data-lift="Shoulder Press"><input placeholder="Shoulder Press weight, optional"><input placeholder="Reps, optional"></div>
+      <div style="margin-top:12px"><label style="font-weight:800;font-size:13px">Workout Date</label><input class="workout-date" type="date" style="width:100%;margin-top:6px"></div><button type="button" class="savebtn" onclick="finishWorkout('Back',this)">Finish Workout</button>
     </div>
   </details>
 
@@ -153,7 +152,7 @@ th{color:var(--muted)}
     <div style="padding:0 16px 16px">
       <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
 <div class="logrow two" data-lift="Front Squat"><input placeholder="Front Squat weight, optional"><input placeholder="Reps, optional"></div>
-      <button type="button" class="savebtn" onclick="finishWorkout('Quads',this)">Finish Workout</button>
+      <div style="margin-top:12px"><label style="font-weight:800;font-size:13px">Workout Date</label><input class="workout-date" type="date" style="width:100%;margin-top:6px"></div><button type="button" class="savebtn" onclick="finishWorkout('Quads',this)">Finish Workout</button>
     </div>
   </details>
 
@@ -168,7 +167,7 @@ th{color:var(--muted)}
     <div style="padding:0 16px 16px">
       <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
 <div class="logrow two" data-lift="Deadlift"><input placeholder="Deadlift weight, optional"><input placeholder="Reps, optional"></div>
-      <button type="button" class="savebtn" onclick="finishWorkout('Deadlift',this)">Finish Workout</button>
+      <div style="margin-top:12px"><label style="font-weight:800;font-size:13px">Workout Date</label><input class="workout-date" type="date" style="width:100%;margin-top:6px"></div><button type="button" class="savebtn" onclick="finishWorkout('Deadlift',this)">Finish Workout</button>
     </div>
   </details>
 
@@ -189,7 +188,7 @@ th{color:var(--muted)}
     <div style="padding:0 16px 16px">
       <div style="font-weight:800;margin-top:10px">Track this lift, only if you did it</div>
 <div class="logrow" data-lift="Bench Press"><input placeholder="Bench weight, optional"><input placeholder="Reps, optional"><input placeholder="Pain 0–10, optional"></div>
-      <button type="button" class="savebtn" onclick="finishWorkout('Bench',this)">Finish Workout</button>
+      <div style="margin-top:12px"><label style="font-weight:800;font-size:13px">Workout Date</label><input class="workout-date" type="date" style="width:100%;margin-top:6px"></div><button type="button" class="savebtn" onclick="finishWorkout('Bench',this)">Finish Workout</button>
     </div>
   </details>
 
@@ -252,6 +251,24 @@ function update(){
     c.innerHTML='<div class="muted" style="font-size:13px">Nothing waiting, you are caught up.</div>';
   }
 }
+
+function todayISO(){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function selectedWorkoutDate(workout){
+  const value=workout.querySelector(".workout-date")?.value || todayISO();
+  const p=value.split("-");
+  return p.length===3 ? `${Number(p[1])}/${Number(p[2])}/${p[0]}` : new Date().toLocaleDateString();
+}
+function initWorkoutDates(){
+  document.querySelectorAll(".workout-date").forEach(inp=>{
+    if(!inp.value) inp.value=todayISO();
+  });
+}
 function finishWorkout(name,btn){
   try{
     const workout=btn.closest("details.workout");
@@ -285,7 +302,7 @@ function finishWorkout(name,btn){
       const pain=(fields[2]?.value||"").trim();
       if(weight || reps || pain){
         state.lifts.push({
-          date:new Date().toLocaleDateString(),
+          date:selectedWorkoutDate(workout),
           week:week,
           workout:name,
           lift:row.dataset.lift,
@@ -300,7 +317,7 @@ function finishWorkout(name,btn){
     state.completed.push({
       week:week,
       name:name,
-      date:new Date().toLocaleDateString()
+      date:selectedWorkoutDate(workout)
     });
     state.next=(rotation.indexOf(name)+1)%rotation.length;
 
@@ -339,6 +356,8 @@ document.querySelectorAll('.workout input[type="checkbox"]').forEach((cb,i)=>{
   cb.addEventListener("change",()=>localStorage.setItem(key,cb.checked?"1":"0"));
 });
 update();
+
+initWorkoutDates();
 </script>
 </body>
 </html>
