@@ -57,7 +57,6 @@ th{color:var(--muted)}
 .primary{background:var(--pink);color:#fff}.secondary{background:#efe7ed;color:var(--ink)}
 @media(max-width:500px){.goalgrid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.weeks{grid-template-columns:repeat(3,1fr)}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -72,7 +71,7 @@ th{color:var(--muted)}
     <div id="authMessage" style="font-size:13px;color:#a33;margin-top:10px"></div>
   </div>
 </div>
-<div id="cloudStatus" style="position:fixed;right:12px;top:12px;z-index:9000;background:white;border:1px solid #eadfe7;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;box-shadow:0 5px 20px rgba(0,0,0,.06)">Cloud…</div>
+<div id="cloudStatus" style="position:fixed;right:12px;top:12px;z-index:9000;background:white;border:1px solid #eadfe7;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800;box-shadow:0 5px 20px rgba(0,0,0,.06)">Loading…</div>
 
 <div class="app">
   <section class="top">
@@ -285,13 +284,12 @@ function update(){
 }
 
 
+
 const PB_SUPABASE_URL = "https://rjwxmnyijbkaprszwngj.supabase.co";
 const PB_SUPABASE_KEY = "sb_publishable_tN2yNv9jHlQSl40DlcBvVg_g0nOx_vE";
-const pbCloud = window.supabase.createClient(PB_SUPABASE_URL, PB_SUPABASE_KEY, {
-  auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
-  renderDynamicProgram();
-});
+const PB_SESSION_KEY = "pb6_supabase_session";
 let pbUser = null;
+let pbSession = null;
 let cloudReady = false;
 let cloudSaveTimer = null;
 
@@ -300,48 +298,174 @@ function setCloudStatus(text) {
   if(el) el.textContent=text;
 }
 
+function showAuth(message="") {
+  const overlay=document.getElementById("authOverlay");
+  if(overlay) overlay.style.display="block";
+  const msg=document.getElementById("authMessage");
+  if(msg) msg.textContent=message;
+  setCloudStatus("Sign in");
+}
+
+function hideAuth() {
+  const overlay=document.getElementById("authOverlay");
+  if(overlay) overlay.style.display="none";
+}
+
+function saveSession(session) {
+  pbSession=session;
+  pbUser=session?.user || null;
+  if(session) localStorage.setItem(PB_SESSION_KEY, JSON.stringify(session));
+  else localStorage.removeItem(PB_SESSION_KEY);
+}
+
+function readStoredSession() {
+  try {
+    return JSON.parse(localStorage.getItem(PB_SESSION_KEY) || "null");
+  } catch(e) {
+    localStorage.removeItem(PB_SESSION_KEY);
+    return null;
+  }
+}
+
+async function authRequest(path, body) {
+  const res=await fetch(PB_SUPABASE_URL + path, {
+    method:"POST",
+    headers:{
+      "apikey":PB_SUPABASE_KEY,
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(body)
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.msg || data.error_description || data.message || "Authentication failed");
+  return data;
+}
+
 async function powerbuildSignIn() {
   const email=document.getElementById("pbEmail").value.trim();
   const password=document.getElementById("pbPassword").value;
   const msg=document.getElementById("authMessage");
-  msg.textContent="";
-  const {data,error}=await pbCloud.auth.signInWithPassword({email,password});
-  if(error) { msg.textContent=error.message; return; }
-  pbUser=data.user;
-  document.getElementById("authOverlay").style.display="none";
-  await loadCloudState();
+  if(msg) msg.textContent="";
+  if(!email || !password) {
+    if(msg) msg.textContent="Enter your email and password.";
+    return;
+  }
+  setCloudStatus("Signing in…");
+  try {
+    const data=await authRequest("/auth/v1/token?grant_type=password", {email,password});
+    saveSession(data);
+    hideAuth();
+    await loadCloudState();
+  } catch(err) {
+    console.error(err);
+    showAuth(err.message);
+  }
+}
+
+async function refreshSession() {
+  const stored=pbSession || readStoredSession();
+  if(!stored?.refresh_token) return false;
+  try {
+    const data=await authRequest("/auth/v1/token?grant_type=refresh_token", {
+      refresh_token:stored.refresh_token
+    });
+    saveSession(data);
+    return true;
+  } catch(err) {
+    console.error(err);
+    saveSession(null);
+    return false;
+  }
+}
+
+async function ensureValidSession() {
+  let s=pbSession || readStoredSession();
+  if(!s) return false;
+  saveSession(s);
+  const now=Math.floor(Date.now()/1000);
+  const expiresAt=s.expires_at || (s.expires_in ? now + Number(s.expires_in) : 0);
+  if(!expiresAt || expiresAt - now < 60) {
+    return await refreshSession();
+  }
+  return true;
+}
+
+async function supabaseRest(path, options={}, retry=true) {
+  const valid=await ensureValidSession();
+  if(!valid) throw new Error("Please sign in again.");
+  const headers=Object.assign({
+    "apikey":PB_SUPABASE_KEY,
+    "Authorization":"Bearer " + pbSession.access_token,
+    "Content-Type":"application/json"
+  }, options.headers || {});
+  const res=await fetch(PB_SUPABASE_URL + "/rest/v1/" + path, {
+    method:options.method || "GET",
+    headers,
+    body:options.body
+  });
+  if(res.status===401 && retry) {
+    const refreshed=await refreshSession();
+    if(refreshed) return supabaseRest(path, options, false);
+  }
+  if(!res.ok) {
+    const data=await res.json().catch(()=>({}));
+    throw new Error(data.message || data.hint || "Cloud request failed");
+  }
+  if(res.status===204) return null;
+  const text=await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 async function loadCloudState() {
   if(!pbUser) return;
   setCloudStatus("Syncing…");
-  const {data,error}=await pbCloud.from("powerbuild_data")
-    .select("app_state")
-    .eq("user_id",pbUser.id)
-    .maybeSingle();
-  if(error) { setCloudStatus("Sync issue"); console.error(error); return; }
-  if(data && data.app_state && Object.keys(data.app_state).length) {
-    state=data.app_state;
-    if(!state.completed) state.completed=[];
-    if(!state.carryover) state.carryover=[];
-    if(!state.lifts) state.lifts=[];
-    if(typeof state.next!=="number") state.next=0;
-    localStorage.setItem("pb6_state",JSON.stringify(state));
-  } else {
-    await saveCloudStateNow();
+  try {
+    const rows=await supabaseRest(
+      "powerbuild_data?user_id=eq." + encodeURIComponent(pbUser.id) + "&select=app_state"
+    );
+    const data=Array.isArray(rows) ? rows[0] : null;
+    if(data?.app_state && Object.keys(data.app_state).length) {
+      state=data.app_state;
+      if(!state.completed) state.completed=[];
+      if(!state.carryover) state.carryover=[];
+      if(!state.lifts) state.lifts=[];
+      if(typeof state.next!=="number") state.next=0;
+      localStorage.setItem("pb6_state",JSON.stringify(state));
+    } else {
+      await saveCloudStateNow();
+    }
+    cloudReady=true;
+    setCloudStatus("Cloud ✓");
+    update();
+    initWorkoutDates();
+  } catch(err) {
+    console.error(err);
+    setCloudStatus("Sync issue");
+    const msg=document.getElementById("authMessage");
+    if(msg) msg.textContent=err.message;
   }
-  cloudReady=true;
-  setCloudStatus("Cloud ✓");
-  update();
-  initWorkoutDates();
 }
 
 async function saveCloudStateNow() {
   if(!pbUser) return;
-  const payload={user_id:pbUser.id,app_state:state,updated_at:new Date().toISOString()};
-  const {error}=await pbCloud.from("powerbuild_data").upsert(payload,{onConflict:"user_id"});
-  if(error) { setCloudStatus("Sync issue"); console.error(error); }
-  else setCloudStatus("Cloud ✓");
+  try {
+    const payload=[{
+      user_id:pbUser.id,
+      app_state:state,
+      updated_at:new Date().toISOString()
+    }];
+    await supabaseRest("powerbuild_data?on_conflict=user_id", {
+      method:"POST",
+      headers:{
+        "Prefer":"resolution=merge-duplicates,return=minimal"
+      },
+      body:JSON.stringify(payload)
+    });
+    setCloudStatus("Cloud ✓");
+  } catch(err) {
+    console.error(err);
+    setCloudStatus("Sync issue");
+  }
 }
 
 function scheduleCloudSave() {
@@ -352,14 +476,24 @@ function scheduleCloudSave() {
 }
 
 async function initCloud() {
-  const {data}=await pbCloud.auth.getSession();
-  if(data.session) {
-    pbUser=data.session.user;
-    document.getElementById("authOverlay").style.display="none";
+  setCloudStatus("Loading…");
+  try {
+    const stored=readStoredSession();
+    if(!stored) {
+      showAuth();
+      return;
+    }
+    saveSession(stored);
+    const valid=await ensureValidSession();
+    if(!valid) {
+      showAuth("Your session expired, sign in again.");
+      return;
+    }
+    hideAuth();
     await loadCloudState();
-  } else {
-    setCloudStatus("Sign in");
-    document.getElementById("authOverlay").style.display="block";
+  } catch(err) {
+    console.error(err);
+    showAuth("Cloud connection failed. Sign in to retry.");
   }
 }
 
